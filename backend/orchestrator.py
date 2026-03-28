@@ -22,15 +22,19 @@ def run_pipeline(image_bytes: bytes, filename: str, mime_type: str, client) -> d
     agent_trail = []
     doc_id = filename.rsplit(".", 1)[0] if "." in filename else filename
 
-    # --- Agent 1: Intake ---
+    # --- Agent 1: Intake (validate + preprocess) ---
     intake = IntakeAgent().run(image_bytes, filename)
     agent_trail.append(_trail_entry(intake))
 
     if intake.status == "fail":
         return _error_report(doc_id, agent_trail, total_start, intake.decision)
 
-    # --- Agent 2: Extraction ---
-    extraction = ExtractionAgent().run(image_bytes, mime_type, client)
+    processed_bytes = intake.data.get("processed_bytes", image_bytes)
+    processed_mime = intake.data.get("mime_type", mime_type)
+    _processed_for_save = processed_bytes
+
+    # --- Agent 2: Extraction (uses preprocessed image) ---
+    extraction = ExtractionAgent().run(processed_bytes, processed_mime, client)
     agent_trail.append(_trail_entry(extraction))
 
     if extraction.status == "fail":
@@ -65,6 +69,7 @@ def run_pipeline(image_bytes: bytes, filename: str, mime_type: str, client) -> d
         "scoring": scoring,
         "agent_trail": agent_trail,
         "processing_time_sec": total_time,
+        "_processed_bytes": _processed_for_save,
     }
 
 

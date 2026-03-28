@@ -15,6 +15,8 @@ import re
 import time
 from dataclasses import dataclass, field
 
+import cv2
+import numpy as np
 from PIL import Image
 from google.genai import types
 
@@ -120,34 +122,32 @@ def parse_json_response(raw_text: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Agent 1: Intake
+# Agent 1: Intake (validate + smart preprocessing)
 # ---------------------------------------------------------------------------
+
+MAX_LONG_EDGE = 1600
+JPEG_QUALITY = 90
 
 class IntakeAgent:
     name = "intake"
 
     def run(self, image_bytes: bytes, filename: str) -> AgentResult:
         start = time.time()
+        steps = []
 
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-        if ext not in ("png", "jpg", "jpeg", "webp"):
+        if ext not in ("png", "jpg", "jpeg", "webp", "heic", "heif"):
             return AgentResult(
                 agent=self.name, status="fail",
                 time_sec=round(time.time() - start, 2),
                 decision=f"Unsupported format: .{ext}",
             )
 
-        size_mb = len(image_bytes) / (1024 * 1024)
-        if size_mb > 10:
-            return AgentResult(
-                agent=self.name, status="fail",
-                time_sec=round(time.time() - start, 2),
-                decision=f"File too large: {size_mb:.1f}MB (max 10MB)",
-            )
+        orig_mb = len(image_bytes) / (1024 * 1024)
 
         try:
-            img = Image.open(io.BytesIO(image_bytes))
-            w, h = img.size
+            pil_img = Image.open(io.BytesIO(image_bytes))
+            orig_w, orig_h = pil_img.size
         except Exception as e:
             return AgentResult(
                 agent=self.name, status="fail",
@@ -155,12 +155,71 @@ class IntakeAgent:
                 decision=f"Cannot read image: {e}",
             )
 
+        steps.append(f"{ext.upper()} {orig_w}x{orig_h} ({orig_mb:.1f}MB)")
+
+        # Strip EXIF — removes GPS, camera metadata, embedded thumbnails
+        pil_img = _strip_exif(pil_img)
+        steps.append("EXIF stripped")
+
+        # Convert to OpenCV for processing
+        cv_img = cv2.cvtColor(np.array(pil_img.convert("RGB")), cv2.COLOR_RGB2BGR)
+
+        # Denoise
+        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        denoised = cv2.fastNlMeansDenoising(gray, h=10)
+
+        # CLAHE contrast enhancement (boosts text readability)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(denoised)
+
+        # Merge enhanced luminance back into color image
+        lab = cv2.cvtColor(cv_img, cv2.COLOR_BGR2LAB)
+        lab[:, :, 0] = enhanced
+        cv_img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        steps.append("denoised + contrast enhanced")
+
+        # Adaptive resize — cap longest edge at MAX_LONG_EDGE, preserve aspect ratio
+        h, w = cv_img.shape[:2]
+        long_edge = max(w, h)
+        if long_edge > MAX_LONG_EDGE:
+            scale = MAX_LONG_EDGE / long_edge
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            cv_img = cv2.resize(cv_img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            steps.append(f"resized {w}x{h} -> {new_w}x{new_h}")
+        else:
+            new_w, new_h = w, h
+
+        # Encode to JPEG
+        encode_params = [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY]
+        _, jpeg_buf = cv2.imencode(".jpg", cv_img, encode_params)
+        processed_bytes = jpeg_buf.tobytes()
+        final_mb = len(processed_bytes) / (1024 * 1024)
+        steps.append(f"JPEG {JPEG_QUALITY}% ({final_mb:.2f}MB)")
+
+        reduction = ((orig_mb - final_mb) / orig_mb * 100) if orig_mb > 0 else 0
+
         return AgentResult(
             agent=self.name, status="pass",
             time_sec=round(time.time() - start, 2),
-            decision=f"Valid {ext.upper()} {w}x{h}px ({size_mb:.1f}MB)",
-            data={"width": w, "height": h, "format": ext, "size_mb": round(size_mb, 2)},
+            decision=f"{orig_w}x{orig_h} -> {new_w}x{new_h}, {orig_mb:.1f}MB -> {final_mb:.2f}MB ({reduction:.0f}% smaller)",
+            data={
+                "processed_bytes": processed_bytes,
+                "mime_type": "image/jpeg",
+                "orig_size": {"w": orig_w, "h": orig_h, "mb": round(orig_mb, 2)},
+                "new_size": {"w": new_w, "h": new_h, "mb": round(final_mb, 2)},
+                "steps": steps,
+            },
         )
+
+
+def _strip_exif(img: Image.Image) -> Image.Image:
+    """Return a copy of the image without EXIF data, handling rotation."""
+    from PIL import ImageOps
+    img = ImageOps.exif_transpose(img)
+    clean = Image.new(img.mode, img.size)
+    clean.putdata(list(img.getdata()))
+    return clean
 
 
 # ---------------------------------------------------------------------------
