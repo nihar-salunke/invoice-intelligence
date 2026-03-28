@@ -38,11 +38,6 @@ body {
   letter-spacing: -0.02em;
 }
 
-.header-subtitle {
-  font-size: 0.8rem;
-  opacity: 0.6;
-}
-
 /* ── Layout ── */
 .main {
   max-width: 1400px;
@@ -158,50 +153,111 @@ h2 {
   color: #c62828;
 }
 
-.result-header {
+/* ── Score Header ── */
+.score-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
 }
 
-.result-header h3 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #555;
-  word-break: break-all;
+.score-ring-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
 }
+
+.score-ring {
+  width: 70px;
+  height: 70px;
+}
+
+.score-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.score-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.compliance-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  width: fit-content;
+}
+
+.compliance-pass { background: #e8f5e9; color: #2e7d32; }
+.compliance-review { background: #fff3e0; color: #e65100; }
+.compliance-fail { background: #ffebee; color: #c62828; }
 
 .processing-time {
   font-size: 0.75rem;
   color: #999;
-  background: #f5f5f5;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  white-space: nowrap;
+}
+
+/* ── Summary ── */
+.result-summary {
+  font-size: 0.88rem;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #5c6bc0;
+}
+
+/* ── Enrichment Badges ── */
+.enrichment-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.enrich-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 16px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  background: #e3f2fd;
+  color: #1565c0;
 }
 
 /* ── Fields Grid ── */
 .fields-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .field-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 0.8rem;
+  padding: 0.5rem 0.8rem;
   background: #fafafa;
   border-radius: 8px;
 }
 
 .field-row label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #777;
   font-weight: 500;
   text-transform: uppercase;
@@ -209,7 +265,7 @@ h2 {
 }
 
 .field-value {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1a1a2e;
   text-align: right;
@@ -223,51 +279,174 @@ h2 {
 .badges-row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .badge {
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
-.badge-green {
-  background: #e8f5e9;
-  color: #2e7d32;
+.badge-green { background: #e8f5e9; color: #2e7d32; }
+.badge-red { background: #ffebee; color: #c62828; }
+
+/* ── Research Section ── */
+.research-section {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: #fafafa;
+  border-radius: 8px;
 }
 
-.badge-red {
-  background: #ffebee;
-  color: #c62828;
+.research-section h4 {
+  font-size: 0.78rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
 }
 
-/* ── Confidence Bar ── */
-.confidence-section {
-  margin-top: 0.5rem;
-}
-
-.confidence-label {
+.research-row {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: #777;
+  gap: 0.75rem;
   margin-bottom: 0.4rem;
 }
 
-.confidence-bar {
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
+.research-check {
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
-.confidence-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #66bb6a, #43a047);
-  border-radius: 4px;
-  transition: width 0.5s ease;
+.rc-pass { color: #2e7d32; }
+.rc-fail { color: #c62828; }
+
+.research-detail {
+  font-size: 0.78rem;
+  color: #666;
+  line-height: 1.4;
+  margin-top: 0.4rem;
+}
+
+/* ── Breakdown Section ── */
+.breakdown-section {
+  padding: 0.75rem;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.breakdown-section h4 {
+  font-size: 0.78rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+
+.bd-label {
+  color: #777;
+  text-transform: capitalize;
+}
+
+.bd-value {
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* ── Agent Trail ── */
+.agent-trail {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.agent-trail h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.trail-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.trail-step {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.trail-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.trail-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-pass { background: #43a047; }
+.dot-warn { background: #ff9800; }
+.dot-fail { background: #e53935; }
+
+.trail-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #e0e0e0;
+}
+
+.trail-content {
+  flex: 1;
+  padding-bottom: 1rem;
+}
+
+.trail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.trail-agent {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.trail-time {
+  font-size: 0.72rem;
+  color: #999;
+  background: #f5f5f5;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+}
+
+.trail-decision {
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.4;
 }
 
 /* ── History Panel ── */

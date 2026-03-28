@@ -38,7 +38,7 @@ export default function History({ refreshKey, onSelect }) {
           >
             <div className="history-item-top">
               <span className="history-dealer">{item.fields.dealer_name || "Unknown"}</span>
-              <span className="history-conf">{Math.round((item.confidence || 0) * 100)}%</span>
+              <span className="history-conf">{item.scoring?.authenticity_score ?? Math.round((item.confidence || 0) * 100)}</span>
             </div>
             <div className="history-item-bottom">
               <span>{item.fields.model_name || "—"}</span>

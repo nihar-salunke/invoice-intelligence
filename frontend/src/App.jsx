@@ -2,6 +2,7 @@ import { useState } from "react";
 import ImageUpload from "./components/ImageUpload";
 import ResultCard from "./components/ResultCard";
 import ImagePreview from "./components/ImagePreview";
+import AgentTrail from "./components/AgentTrail";
 import History from "./components/History";
 import "./App.css";
 
@@ -31,21 +32,29 @@ export default function App() {
             {processing && (
               <div className="processing-indicator">
                 <div className="spinner" />
-                <span>Analyzing invoice...</span>
+                <span>Running agent pipeline...</span>
               </div>
             )}
           </section>
 
           {result && !result.error && (
-            <section className="result-section">
-              <h2>Extracted Fields</h2>
-              <div className="result-with-preview">
-                {result.imageUrl && (
-                  <ImagePreview imageUrl={result.imageUrl} fields={result.fields} />
-                )}
-                <ResultCard result={result} />
-              </div>
-            </section>
+            <>
+              <section className="result-section">
+                <h2>Verification Report</h2>
+                <div className="result-with-preview">
+                  {result.imageUrl && (
+                    <ImagePreview imageUrl={result.imageUrl} fields={result.fields} />
+                  )}
+                  <ResultCard result={result} />
+                </div>
+              </section>
+
+              {result.agent_trail && (
+                <section className="trail-section">
+                  <AgentTrail trail={result.agent_trail} />
+                </section>
+              )}
+            </>
           )}
 
           {result?.error && (
