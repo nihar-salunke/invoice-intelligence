@@ -30,7 +30,11 @@ except ImportError:
     print("ERROR: google-genai package not installed. Run: pip install google-genai")
     sys.exit(1)
 
-GEMINI_API_KEY = "AIzaSyBXP8IF2oFlc8-YBEp6hrREx8TZMlcQ5Xs"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+if not GEMINI_API_KEY:
+    print("ERROR: Set GEMINI_API_KEY environment variable. Example:")
+    print("  export GEMINI_API_KEY=your-key-here")
+    sys.exit(1)
 
 EXTRACTION_PROMPT = """You are an expert document AI agent analyzing Indian tractor invoice/quotation images.
 
