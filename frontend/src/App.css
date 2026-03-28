@@ -527,16 +527,35 @@ h2 {
 
 /* ── Result With Preview ── */
 .result-with-preview {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
-  align-items: start;
 }
 
-/* ── Image Preview + Bounding Boxes ── */
+/* ── Dual Image Preview ── */
+.image-preview-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.preview-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+  text-align: center;
+}
+
 .image-preview-container {
   position: relative;
-  display: inline-block;
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -548,26 +567,6 @@ h2 {
   width: 100%;
   height: auto;
   border-radius: 12px;
-}
-
-.bbox-overlay {
-  position: absolute;
-  border: 3px solid;
-  border-radius: 4px;
-  pointer-events: none;
-}
-
-.bbox-label {
-  position: absolute;
-  top: -22px;
-  left: -2px;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px 4px 0 0;
-  white-space: nowrap;
-  letter-spacing: 0.03em;
 }
 
 /* ── Responsive ── */

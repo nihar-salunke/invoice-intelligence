@@ -43,7 +43,7 @@ export default function App() {
                 <h2>Verification Report</h2>
                 <div className="result-with-preview">
                   {result.imageUrl && (
-                    <ImagePreview imageUrl={result.imageUrl} fields={result.fields} />
+                    <ImagePreview imageUrl={result.imageUrl} processedUrl={result.processed_image_url} />
                   )}
                   <ResultCard result={result} />
                 </div>
