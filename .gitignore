@@ -19,6 +19,7 @@ dist-ssr/
 results/
 results_gemini/
 results_vertex/
+processed_images/
 input_images/
 
 # OS

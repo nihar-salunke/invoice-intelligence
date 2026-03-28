@@ -11,6 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 from google import genai
 from google.oauth2 import service_account
@@ -20,6 +21,7 @@ from orchestrator import run_pipeline
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CREDENTIALS_PATH = PROJECT_ROOT / "credentials.json"
 RESULTS_DIR = PROJECT_ROOT / "results_vertex"
+PROCESSED_DIR = PROJECT_ROOT / "processed_images"
 PROJECT_ID = "project-ai-api-keys"
 LOCATION = "us-central1"
 
@@ -71,8 +73,17 @@ async def extract_fields(file: UploadFile = File(...)):
 
     result = run_pipeline(image_bytes, filename, mime, gemini_client)
 
-    RESULTS_DIR.mkdir(exist_ok=True)
     doc_id = result["doc_id"]
+
+    # Save preprocessed image
+    processed_bytes = result.pop("_processed_bytes", None)
+    if processed_bytes:
+        PROCESSED_DIR.mkdir(exist_ok=True)
+        with open(PROCESSED_DIR / f"{doc_id}.jpg", "wb") as f:
+            f.write(processed_bytes)
+        result["processed_image_url"] = f"/api/processed/{doc_id}"
+
+    RESULTS_DIR.mkdir(exist_ok=True)
     with open(RESULTS_DIR / f"{doc_id}.json", "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
@@ -97,3 +108,11 @@ def get_result(doc_id: str):
         raise HTTPException(status_code=404, detail=f"Result not found: {doc_id}")
     with open(fp, encoding="utf-8") as f:
         return json.load(f)
+
+
+@app.get("/api/processed/{doc_id}")
+def get_processed_image(doc_id: str):
+    fp = PROCESSED_DIR / f"{doc_id}.jpg"
+    if not fp.exists():
+        raise HTTPException(status_code=404, detail="Processed image not found")
+    return Response(content=fp.read_bytes(), media_type="image/jpeg")
