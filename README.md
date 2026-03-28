@@ -27,8 +27,8 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture docum
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/nihar-salunke/idfc-hack-submission.git
-cd idfc-hack-submission
+git clone https://github.com/nihar-salunke/invoice-intelligence.git
+cd invoice-intelligence
 ```
 
 ### 2. Google Cloud / Vertex AI Setup
