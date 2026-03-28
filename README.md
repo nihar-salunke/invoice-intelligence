@@ -2,10 +2,6 @@
 
 An agentic AI system that automates tractor invoice verification for loan processing. Upload an invoice image and a 5-agent pipeline extracts fields, detects language and state, verifies dealer and HP specs via web search, validates business rules, and produces an authenticity score -- all with a full audit trail.
 
-## Demo Walkthrough
-
-[![Watch the walkthrough](https://img.youtube.com/vi/I8W-4oq1onY/maxresdefault.jpg)](https://www.youtube.com/watch?v=I8W-4oq1onY)
-
 ## Architecture
 
 Five agents run in sequence per invoice:
@@ -37,7 +33,7 @@ cd idfc-hack-submission
 
 ### 2. Google Cloud / Vertex AI Setup
 
-You need a GCP project with Vertex AI enabled and a service account.
+You need a GCP project with Vertex AI enabled and a service account. For a video walkthrough of this setup, see: https://www.youtube.com/watch?v=I8W-4oq1onY
 
 **a) Enable the Vertex AI API:**
 
@@ -147,4 +143,3 @@ idfc-hack-submission/
 | Source code | This repository |
 | Architecture document | [docs/architecture.md](docs/architecture.md) |
 | Impact model | [docs/impact-model.md](docs/impact-model.md) |
-| Demo video | [YouTube](https://www.youtube.com/watch?v=I8W-4oq1onY) |
