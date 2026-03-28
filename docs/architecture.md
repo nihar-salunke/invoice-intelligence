@@ -6,50 +6,85 @@ Invoice Intelligence is a multi-agent system that verifies tractor invoices for 
 
 ## System Architecture
 
+```mermaid
+flowchart TD
+    User["User"] -->|"uploads image"| Frontend
+
+    subgraph ui [React Frontend :5173]
+        Frontend["Upload / Report / Agent Trail"]
+    end
+
+    Frontend -->|"POST /api/extract"| API
+
+    subgraph backend [FastAPI Backend :8000]
+        API["/api/extract"] --> Orchestrator
+        Orchestrator["Orchestrator"] --> A1
+
+        subgraph pipeline [Agent Pipeline]
+            A1["Agent 1: Intake\n(Python + OpenCV)"]
+            A2["Agent 2: Extraction\n(Gemini 2.5 Flash)"]
+            A3["Agent 3: Research\n(Gemini + Google Search)"]
+            A4["Agent 4: Validation\n(Python rules)"]
+            A5["Agent 5: Scoring\n(Python scoring)"]
+            A1 -->|"preprocessed image"| A2
+            A2 -->|"fields + enrichment"| A3
+            A3 -->|"research results"| A4
+            A4 -->|"warnings / errors"| A5
+        end
+
+        A5 -->|"final report"| ResultJSON["results_vertex/*.json"]
+    end
+
+    A2 -->|"image + prompt"| VertexAI
+    A3 -->|"search query"| VertexAI
+
+    subgraph gcp [Google Cloud]
+        VertexAI["Vertex AI\nGemini 2.5 Flash"]
+        GoogleSearch["Google Search\nGrounding"]
+        VertexAI --- GoogleSearch
+    end
+
+    API -->|"JSON response"| Frontend
 ```
-                    ┌──────────────────────────┐
-                    │     React Frontend        │
-                    │     (localhost:5173)       │
-                    │  Upload / Report / Trail   │
-                    └────────────┬───────────────┘
-                                 │ POST /api/extract
-                                 │ (multipart image)
-                    ┌────────────▼───────────────┐
-                    │     FastAPI Backend         │
-                    │     (localhost:8000)         │
-                    │                             │
-                    │  ┌───────────────────────┐  │
-                    │  │     Orchestrator       │  │
-                    │  │  (sequential runner)   │  │
-                    │  └───────────┬───────────┘  │
-                    │              │               │
-                    │  ┌───────────▼───────────┐  │
-                    │  │   Agent 1: Intake      │  │
-                    │  │   (Python + OpenCV)    │  │
-                    │  └───────────┬───────────┘  │
-                    │              │               │
-                    │  ┌───────────▼───────────┐  │
-                    │  │   Agent 2: Extraction  │──┼──── Vertex AI (Gemini 2.5 Flash)
-                    │  │   (Gemini API call)    │  │
-                    │  └───────────┬───────────┘  │
-                    │              │               │
-                    │  ┌───────────▼───────────┐  │
-                    │  │   Agent 3: Research    │──┼──── Vertex AI + Google Search
-                    │  │   (Gemini + Search)    │  │
-                    │  └───────────┬───────────┘  │
-                    │              │               │
-                    │  ┌───────────▼───────────┐  │
-                    │  │   Agent 4: Validation  │  │
-                    │  │   (Python rules)       │  │
-                    │  └───────────┬───────────┘  │
-                    │              │               │
-                    │  ┌───────────▼───────────┐  │
-                    │  │   Agent 5: Scoring     │  │
-                    │  │   (Python scoring)     │  │
-                    │  └───────────┴───────────┘  │
-                    │                             │
-                    │  Results saved to JSON       │
-                    └─────────────────────────────┘
+
+### Data Flow
+
+```mermaid
+flowchart LR
+    subgraph intake [Agent 1: Intake]
+        Raw["Raw Image\n5.8MB PNG"] --> Strip["Strip EXIF"]
+        Strip --> Denoise["Denoise"]
+        Denoise --> CLAHE["CLAHE Enhance"]
+        CLAHE --> Resize["Adaptive Resize"]
+        Resize --> JPEG["JPEG 90%\n0.3MB"]
+    end
+
+    subgraph extraction [Agent 2: Extraction]
+        JPEG --> Gemini1["Gemini Call"]
+        Gemini1 --> Fields["dealer, model,\nHP, cost,\nsig, stamp"]
+        Gemini1 --> Enrich["language,\nstate,\ndoc type"]
+    end
+
+    subgraph research [Agent 3: Research]
+        Fields --> Gemini2["Gemini +\nGoogle Search"]
+        Gemini2 --> HPVerify["HP verified?\nexpected HP"]
+        Gemini2 --> DealerVerify["Dealer found\nonline?"]
+    end
+
+    subgraph validation [Agent 4: Validation]
+        Fields --> Rules["Business Rules"]
+        HPVerify --> Rules
+        DealerVerify --> Rules
+        Rules --> Warnings["warnings / errors"]
+    end
+
+    subgraph scoring [Agent 5: Scoring]
+        Fields --> Score["Weighted Score\n0-100"]
+        Warnings --> Score
+        HPVerify --> Score
+        DealerVerify --> Score
+        Score --> Verdict["PASS / REVIEW / FAIL"]
+    end
 ```
 
 ## Agent Roles
