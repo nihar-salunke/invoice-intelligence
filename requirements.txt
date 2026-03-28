@@ -1,0 +1,27 @@
+# Core Computer Vision and OCR
+opencv-python>=4.5.0
+pillow>=8.0.0
+pytesseract>=0.3.9
+numpy>=1.21.0
+
+# Deep Learning and Transformers
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.35.0
+accelerate>=0.20.0
+
+# Vision Language Models
+# Note: MoonDream2 requires trust_remote_code=True
+
+# OpenAI CLIP for visual validation
+openai-clip>=1.0.1
+
+# Data visualization (for pipeline visualization)
+matplotlib>=3.5.0
+
+# Additional ML utilities
+scikit-learn>=1.0.0
+regex>=2023.0.0
+
+# System utilities (usually included with Python)
+# json, re, time, os, glob, random, sys, argparse, importlib
