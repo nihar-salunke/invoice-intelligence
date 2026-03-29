@@ -14,22 +14,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from google import genai
-from google.oauth2 import service_account
 
 from orchestrator import run_pipeline
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CREDENTIALS_PATH = PROJECT_ROOT / "credentials.json"
-RESULTS_DIR = PROJECT_ROOT / "results_vertex"
-PROCESSED_DIR = PROJECT_ROOT / "processed_images"
-PROJECT_ID = "project-ai-api-keys"
-LOCATION = "us-central1"
+PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "project-ai-api-keys")
+LOCATION = os.environ.get("GCP_LOCATION", "us-central1")
+
+# Cloud Run provides K_SERVICE env var; use /tmp for ephemeral storage there
+if os.environ.get("K_SERVICE"):
+    RESULTS_DIR = Path("/tmp/results_vertex")
+    PROCESSED_DIR = Path("/tmp/processed_images")
+else:
+    RESULTS_DIR = PROJECT_ROOT / "results_vertex"
+    PROCESSED_DIR = PROJECT_ROOT / "processed_images"
 
 app = FastAPI(title="Invoice Intelligence API")
 
+CORS_ORIGINS = os.environ.get(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173",
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[o.strip() for o in CORS_ORIGINS.split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,19 +49,28 @@ gemini_client = None
 @app.on_event("startup")
 def startup():
     global gemini_client
-    if not CREDENTIALS_PATH.exists():
-        raise RuntimeError(f"Credentials not found at {CREDENTIALS_PATH}")
-
-    credentials = service_account.Credentials.from_service_account_file(
-        str(CREDENTIALS_PATH),
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-    gemini_client = genai.Client(
-        vertexai=True,
-        credentials=credentials,
-        project=PROJECT_ID,
-        location=LOCATION,
-    )
+    # On Cloud Run, Application Default Credentials are provided automatically
+    # by the service account. For local dev, set GOOGLE_APPLICATION_CREDENTIALS
+    # to a service account key file path.
+    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if creds_path:
+        from google.oauth2 import service_account
+        credentials = service_account.Credentials.from_service_account_file(
+            creds_path,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+        gemini_client = genai.Client(
+            vertexai=True,
+            credentials=credentials,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
+    else:
+        gemini_client = genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     print(f"Vertex AI client ready (project={PROJECT_ID})")
 
 
